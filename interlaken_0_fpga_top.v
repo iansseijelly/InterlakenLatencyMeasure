@@ -33,7 +33,7 @@ localparam DONE_WAIT           = 9;
 reg [4:0]     present_state;
 reg           lbus_tx_rx_restart_in;
 
-wire          sys_reset;
+reg          sys_reset;
 wire          tx_done_led;
 wire          tx_busy_led;
 wire          tx_fail_led;
