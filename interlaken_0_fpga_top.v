@@ -4,7 +4,7 @@ module interlaken_0_fpga_top (
   input wire     init_clk,
   input wire     gt_ref_clk0_p,
   input wire     gt_ref_clk0_n,
-  input wire     sys_reset,
+  input wire     clk_reset,
 
   // Debug signals for simulation testbench
   // TODO: Must remove before running on actual FPGA simulation
@@ -33,6 +33,7 @@ localparam DONE_WAIT           = 9;
 reg [4:0]     present_state;
 reg           lbus_tx_rx_restart_in;
 
+wire          sys_reset;
 wire          tx_done_led;
 wire          tx_busy_led;
 wire          tx_fail_led;
@@ -108,9 +109,10 @@ assign send_msg9        = send_msg9_reg;
 // TODO: Eventually will have to become 2 state machines (one for each core which are on separate FPGAs), this
 //       will involve a post-rx-alignment handshake between the cores prior to beginning actual packet generation
 always @(posedge init_clk) begin
-  if (sys_reset == 1'b1) begin
+  if (clk_reset == 1'b1) begin
     present_state         <= GT_LOCK_WAIT;
 
+    sys_reset             <= 1'b1;
     lbus_tx_rx_restart_in <= 1'b0;
     rx_failed_flag        <= 1'b0;
     s_axi_pm_tick         <= 1'b0;
@@ -129,6 +131,7 @@ always @(posedge init_clk) begin
 
     tx_rx_restart_sent    <= 1'b0;
   end else begin
+    sys_reset             <= 1'b0;
     case (present_state)
       GT_LOCK_WAIT : begin
         if (msg1_sent == 1'b0) begin

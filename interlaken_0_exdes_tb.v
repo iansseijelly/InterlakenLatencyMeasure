@@ -183,7 +183,7 @@ initial
 	      $finish;
       end
   
-         wait(rx_gt_locked_led || timed_out);
+      wait(rx_gt_locked_led || timed_out);
 
       if(timed_out) 
       begin
