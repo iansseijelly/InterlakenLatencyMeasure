@@ -60,10 +60,10 @@ wire          rpt_rx_done_led;
 wire          rpt_rx_failed_led;
 wire          rpt_rx_busy_led;
 
-wire [11:0]   gt_rpttodrv_p;
-wire [11:0]   gt_rpttodrv_n;
-wire [11:0]   gt_drvtorpt_p;
-wire [11:0]   gt_drvtorpt_n;
+wire [3:0]   gt_rpttodrv_p;
+wire [3:0]   gt_rpttodrv_n;
+wire [3:0]   gt_drvtorpt_p;
+wire [3:0]   gt_drvtorpt_n;
 
 reg           timed_out;
 reg           time_out_cntr_en;

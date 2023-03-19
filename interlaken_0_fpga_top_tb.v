@@ -55,7 +55,7 @@ initial begin
   gt_ref_clk0_p =1;
   forever
     begin
-      #2560.000   gt_ref_clk0_p = ~  gt_ref_clk0_p;
+      #1241.212   gt_ref_clk0_p = ~  gt_ref_clk0_p;
     end
 end
 
@@ -63,7 +63,7 @@ initial begin
   gt_ref_clk0_n =0;
   forever 
     begin
-      #2560.000   gt_ref_clk0_n = ~  gt_ref_clk0_n;
+      #1241.212   gt_ref_clk0_n = ~  gt_ref_clk0_n;
    end
 end
 

@@ -64,10 +64,10 @@ module interlaken_0_exdes
   input wire      init_clk,
   input wire      gt_ref_clk0_p,
   input wire      gt_ref_clk0_n,
-  input  [11 :0] gt_rxp_in,
-  input  [11 :0] gt_rxn_in,
-  output [11 :0] gt_txp_out,
-  output [11 :0] gt_txn_out,
+  input  [3 :0] gt_rxp_in,
+  input  [3 :0] gt_rxn_in,
+  output [3 :0] gt_txp_out,
+  output [3 :0] gt_txn_out,
 
   input  wire     s_axi_pm_tick,
   input wire      sys_reset
@@ -76,12 +76,12 @@ module interlaken_0_exdes
 parameter DUPLEX_PKT_NUM            =  1000;   //// Duplex mode packet number
                                                //// NOTE: Number of Packets should be even
 
-wire [35:0]    gt_loopback_in;
+wire [11:0]    gt_loopback_in;
 
 //// For other GT loopback option please change the value appropriately
 //// For example, for internal loopback gt_loopback_in[2:0] = 3'b010;
 //// For more information and settings on loopback, refer GT Transceivers user guide
-assign gt_loopback_in =  {12{3'b000}};
+assign gt_loopback_in =  {4{3'b000}};
 
 wire            s_axi_aclk;
 wire            s_axi_sreset;
