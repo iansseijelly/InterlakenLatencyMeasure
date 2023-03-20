@@ -56,110 +56,53 @@ module interlaken_0_exdes_tb
   reg             init_clk;
   reg             gt_ref_clk0_p;
   reg             gt_ref_clk0_n;
+
   reg             sys_reset;
 
+  reg             lbus_tx_rx_restart_in;
   wire            tx_done_led;
   wire            tx_busy_led;
   wire            tx_fail_led;
+  
   wire            rx_gt_locked_led;
   wire            rx_aligned_led;
   wire            rx_done_led;
   wire            rx_failed_led;
   wire            rx_busy_led;
-
-  reg             lbus_tx_rx_restart_in;
-
-  wire            drv_tx_done_led;
-  wire            drv_tx_busy_led;
-  wire            drv_tx_fail_led;
-  wire            drv_rx_gt_locked_led;
-  wire            drv_rx_aligned_led;
-  wire            drv_rx_done_led;
-  wire            drv_rx_failed_led;
-  wire            drv_rx_busy_led;
-  
-  wire            rpt_tx_done_led;
-  wire            rpt_tx_busy_led;
-  wire            rpt_tx_fail_led;
-  wire            rpt_rx_gt_locked_led;
-  wire            rpt_rx_aligned_led;
-  wire            rpt_rx_done_led;
-  wire            rpt_rx_failed_led;
-  wire            rpt_rx_busy_led;
-
-  wire [11 :0]    gt_rpttodrv_p;
-  wire [11 :0]    gt_rpttodrv_n;
-  wire [11 :0]    gt_drvtorpt_p;
-  wire [11 :0]    gt_drvtorpt_n;
-
-  reg             timed_out;
-  reg             time_out_cntr_en;
-  reg  [19 :0]    time_out_cntr;
-  reg             rx_failed_flag;
-  reg             s_axi_pm_tick;
-
-
+  wire [3 :0] gt_p_loopback;
+  wire [3 :0] gt_n_loopback;
+  reg                        timed_out;
+  reg                        time_out_cntr_en;
+  reg  [19 :0]               time_out_cntr;
+  reg                        rx_failed_flag;
+  reg                        s_axi_pm_tick;
 parameter OPERATION          = 3;
 
-interlaken_0_exdes #(.IS_DRIVER(1)) EXDES_DRV
+interlaken_0_exdes #(.IS_DRIVER(1)) EXDES
 (
-.init_clk                     (init_clk),
-.gt_ref_clk0_p                (gt_ref_clk0_p),
-.gt_ref_clk0_n                (gt_ref_clk0_n),
-.sys_reset                    (sys_reset),
+.init_clk                        (init_clk),
+.gt_ref_clk0_p                    (gt_ref_clk0_p),
+.gt_ref_clk0_n                    (gt_ref_clk0_n),
+.sys_reset                       (sys_reset),
 
-.gt_rxp_in                    (gt_rpttodrv_p),
-.gt_rxn_in                    (gt_rpttodrv_n),
-.gt_txp_out                   (gt_drvtorpt_p),
-.gt_txn_out                   (gt_drvtorpt_n),
+.gt_rxp_in                    (gt_p_loopback),
+.gt_rxn_in                    (gt_n_loopback),
+.gt_txp_out                   (gt_p_loopback),
+.gt_txn_out                   (gt_n_loopback),
 
 
-.tx_done_led                  (drv_tx_done_led),
-.tx_busy_led                  (drv_tx_busy_led),
-.tx_fail_led                  (drv_tx_fail_led),
-.rx_gt_locked_led             (drv_rx_gt_locked_led),
-.rx_aligned_led               (drv_rx_aligned_led),
-.rx_done_led                  (drv_rx_done_led),
-.rx_failed_led                (drv_rx_failed_led),
-.rx_busy_led                  (drv_rx_busy_led),
-.s_axi_pm_tick                (s_axi_pm_tick),
-.lbus_tx_rx_restart_in        (lbus_tx_rx_restart_in)
+  .tx_done_led                  (tx_done_led),
+  .tx_busy_led                  (tx_busy_led),
+  .tx_fail_led                  (tx_fail_led),
+  .rx_gt_locked_led             (rx_gt_locked_led),
+  .rx_aligned_led               (rx_aligned_led),
+  .rx_done_led                  (rx_done_led),
+  .rx_failed_led                (rx_failed_led),
+  .rx_busy_led                  (rx_busy_led),
+    .s_axi_pm_tick              (s_axi_pm_tick),
+.lbus_tx_rx_restart_in          (lbus_tx_rx_restart_in)
 );
-
-interlaken_0_exdes #(.IS_DRIVER(0)) EXDES_RPT
-(
-.init_clk                     (init_clk),
-.gt_ref_clk0_p                (gt_ref_clk0_p),
-.gt_ref_clk0_n                (gt_ref_clk0_n),
-.sys_reset                    (sys_reset),
-
-.gt_rxp_in                    (gt_drvtorpt_p),
-.gt_rxn_in                    (gt_drvtorpt_n),
-.gt_txp_out                   (gt_rpttodrv_p),
-.gt_txn_out                   (gt_rpttodrv_n),
-
-
-.tx_done_led                  (rpt_tx_done_led),
-.tx_busy_led                  (rpt_tx_busy_led),
-.tx_fail_led                  (rpt_tx_fail_led),
-.rx_gt_locked_led             (rpt_rx_gt_locked_led),
-.rx_aligned_led               (rpt_rx_aligned_led),
-.rx_done_led                  (rpt_rx_done_led),
-.rx_failed_led                (rpt_rx_failed_led),
-.rx_busy_led                  (rpt_rx_busy_led),
-.s_axi_pm_tick                (s_axi_pm_tick),
-.lbus_tx_rx_restart_in        (lbus_tx_rx_restart_in)
-);
-
-assign tx_done_led = drv_tx_done_led & rpt_tx_done_led;
-assign tx_busy_led = drv_tx_busy_led & rpt_tx_busy_led;
-assign tx_fail_led = drv_tx_fail_led & rpt_tx_fail_led;
-assign rx_gt_locked_led = drv_rx_gt_locked_led & rpt_rx_gt_locked_led;
-assign rx_aligned_led = drv_rx_aligned_led & rpt_rx_aligned_led;
-assign rx_done_led  = drv_rx_done_led & rpt_rx_done_led;
-assign rx_failed_led = drv_rx_failed_led & rpt_rx_failed_led;
-assign rx_busy_led  = drv_rx_busy_led & rpt_rx_busy_led;
-
+ 
 initial 
   begin
       $display("****************");
@@ -183,7 +126,7 @@ initial
 	      $finish;
       end
   
-      wait(rx_gt_locked_led || timed_out);
+         wait(rx_gt_locked_led || timed_out);
 
       if(timed_out) 
       begin
@@ -220,9 +163,8 @@ initial
       time_out_cntr_en = 0;
   
 
-      wait(tx_done_led);
+      wait(tx_done_led );
       $display("INFO : ALL PACKETS SENT");
-
       if (tx_fail_led) 
       begin
           $display("ERROR : TX Overflow error -TX ERROR ");
@@ -317,7 +259,7 @@ initial begin
   gt_ref_clk0_p =1;
   forever
     begin
-      #2560.000   gt_ref_clk0_p = ~  gt_ref_clk0_p;
+      #1241.212   gt_ref_clk0_p = ~  gt_ref_clk0_p;
     end
 end
 
@@ -325,7 +267,7 @@ initial begin
   gt_ref_clk0_n =0;
   forever 
     begin
-      #2560.000   gt_ref_clk0_n = ~  gt_ref_clk0_n;
+      #1241.212   gt_ref_clk0_n = ~  gt_ref_clk0_n;
    end
 end
 

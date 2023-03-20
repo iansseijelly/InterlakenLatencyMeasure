@@ -117,7 +117,7 @@ wire          gt_rxresetdone_int;
 wire          gt_tx_reset_done_inv;
 wire          gt_rx_reset_done_inv;
 wire          gt_refclk_out;
-wire [11 :0] gtpowergood_out;
+wire [3 :0] gtpowergood_out;
 //////////////////////////////////////////
 wire          tx_gt_locked_led;
 wire [127:0]  tx_data0;
