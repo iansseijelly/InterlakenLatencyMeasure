@@ -48,7 +48,7 @@
 `timescale 1ps/1ps
 (* DowngradeIPIdentifiedWarnings="yes" *)
 module interlaken_0_exdes
-#(parameter IS_DRIVER = 1'b0) // 1'b1: Driver, 1'b0: Repeater)
+#(parameter IS_DRIVER = 1'b1) // 1'b1: Driver, 1'b0: Repeater)
 (
   output          tx_busy_led,
   output          tx_done_led,
@@ -238,11 +238,12 @@ assign lockedn = ~locked;
    //// Clock in ports
     .clk_in1    (gt_txusrclk2), 
     .clk_out1   (lbus_clk),
+    .clk_out2   (core_clk),
  
     .reset      (gt_tx_reset_done_inv),
     .locked     (locked)
  );
-assign core_clk = lbus_clk; 
+// assign core_clk = lbus_clk; 
 
 interlaken_0_lbus_pkt_gen_mon #(
     .IS_DRIVER                (IS_DRIVER),
