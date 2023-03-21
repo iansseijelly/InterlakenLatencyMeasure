@@ -4,19 +4,7 @@ module interlaken_0_fpga_top (
   input wire     init_clk,
   input wire     gt_ref_clk0_p,
   input wire     gt_ref_clk0_n,
-  input wire     clk_reset,
-
-  // Debug signals for simulation testbench
-  // TODO: Must remove before running on actual FPGA simulation
-  output wire    send_msg1,
-  output wire    send_msg2,
-  output wire    send_msg3,
-  output wire    send_msg4,
-  output wire    send_msg5,
-  output wire    send_msg6,
-  output wire    send_msg7,
-  output wire    send_msg8,
-  output wire    send_msg9
+  input wire     clk_reset
 );
 
 localparam GT_LOCK_WAIT        = 0;
@@ -29,11 +17,12 @@ localparam TX_RX_BUSY_WAIT     = 6;
 localparam PACKET_SEND_2       = 7;
 localparam PACKET_RECEIVE_2    = 8;
 localparam DONE_WAIT           = 9;
+localparam DONE                = 10;
 
 reg [4:0]     present_state;
 reg           lbus_tx_rx_restart_in;
 
-reg          sys_reset;
+reg           sys_reset;
 wire          tx_done_led;
 wire          tx_busy_led;
 wire          tx_fail_led;
@@ -60,10 +49,10 @@ wire          rpt_rx_done_led;
 wire          rpt_rx_failed_led;
 wire          rpt_rx_busy_led;
 
-wire [3:0]   gt_rpttodrv_p;
-wire [3:0]   gt_rpttodrv_n;
-wire [3:0]   gt_drvtorpt_p;
-wire [3:0]   gt_drvtorpt_n;
+wire [3:0]    gt_rpttodrv_p;
+wire [3:0]    gt_rpttodrv_n;
+wire [3:0]    gt_drvtorpt_p;
+wire [3:0]    gt_drvtorpt_n;
 
 reg           timed_out;
 reg           time_out_cntr_en;
@@ -74,18 +63,6 @@ reg           tx_rx_restart_sent;
 
 // Debug signals for simulation testbench
 // TODO: Must remove before running on actual FPGA simulation
-reg           msg1_sent;
-reg           msg9_sent;
-reg           send_msg1_reg;
-reg           send_msg2_reg;
-reg           send_msg3_reg;
-reg           send_msg4_reg;
-reg           send_msg5_reg;
-reg           send_msg6_reg;
-reg           send_msg7_reg;
-reg           send_msg8_reg;
-reg           send_msg9_reg;
-
 assign tx_done_led      = drv_tx_done_led & rpt_tx_done_led;
 assign tx_busy_led      = drv_tx_busy_led & rpt_tx_busy_led;
 assign tx_fail_led      = drv_tx_fail_led & rpt_tx_fail_led;
@@ -94,16 +71,6 @@ assign rx_aligned_led   = drv_rx_aligned_led & rpt_rx_aligned_led;
 assign rx_done_led      = drv_rx_done_led & rpt_rx_done_led;
 assign rx_failed_led    = drv_rx_failed_led & rpt_rx_failed_led;
 assign rx_busy_led      = drv_rx_busy_led & rpt_rx_busy_led;
-
-assign send_msg1        = send_msg1_reg;
-assign send_msg2        = send_msg2_reg;
-assign send_msg3        = send_msg3_reg;
-assign send_msg4        = send_msg4_reg;
-assign send_msg5        = send_msg5_reg;
-assign send_msg6        = send_msg6_reg;
-assign send_msg7        = send_msg7_reg;
-assign send_msg8        = send_msg8_reg;
-assign send_msg9        = send_msg9_reg;
 
 // state machine
 // TODO: Eventually will have to become 2 state machines (one for each core which are on separate FPGAs), this
@@ -117,31 +84,13 @@ always @(posedge init_clk) begin
     rx_failed_flag        <= 1'b0;
     s_axi_pm_tick         <= 1'b0;
 
-    msg1_sent             <= 1'b0;
-    msg9_sent             <= 1'b0;
-    send_msg1_reg         <= 1'b0;
-    send_msg2_reg         <= 1'b0;
-    send_msg3_reg         <= 1'b0;
-    send_msg4_reg         <= 1'b0;
-    send_msg5_reg         <= 1'b0;
-    send_msg6_reg         <= 1'b0;
-    send_msg7_reg         <= 1'b0;
-    send_msg8_reg         <= 1'b0;
-    send_msg9_reg         <= 1'b0;
-
     tx_rx_restart_sent    <= 1'b0;
   end else begin
     sys_reset             <= 1'b0;
     case (present_state)
       GT_LOCK_WAIT : begin
-        if (msg1_sent == 1'b0) begin
-          send_msg1_reg <= 1'b1; // SYS_RESET RELEASED + WAITING FOR GT LOCK
-          msg1_sent     <= 1'b1;
-        end
-
         if (rx_gt_locked_led == 1'b1) begin
           present_state <= RX_ALIGN_WAIT;
-          send_msg2_reg <= 1'b1; // GT LOCKED + WAITING FOR STAT_RX_ALIGNED
         end else begin
           present_state <= GT_LOCK_WAIT;
         end
@@ -150,7 +99,6 @@ always @(posedge init_clk) begin
       RX_ALIGN_WAIT : begin // TODO: must modify example design to perform handshake before sending actual packets
         if (rx_aligned_led == 1'b1) begin
           present_state <= PACKET_SEND_1;
-          send_msg3_reg <= 1'b1; // RX ALIGNED + BEGINNING PACKET GENERATION
         end else begin
           present_state <= RX_ALIGN_WAIT;
         end
@@ -159,7 +107,6 @@ always @(posedge init_clk) begin
       PACKET_SEND_1 : begin
         if (tx_done_led == 1'b1) begin
           present_state <= PACKET_RECEIVE_1;
-          send_msg4_reg <= 1'b1; // ALL PACKETS SENT
         end else begin
           present_state <= PACKET_SEND_1;
         end
@@ -168,7 +115,6 @@ always @(posedge init_clk) begin
       PACKET_RECEIVE_1 : begin
         if (rx_done_led == 1'b1) begin
           present_state <= PACKET_RESTART_WAIT; 
-          send_msg5_reg <= 1'b1; // ALL PACKETS RECEIVED
         end else begin
           present_state <= PACKET_RECEIVE_1;
         end
@@ -177,7 +123,6 @@ always @(posedge init_clk) begin
       PACKET_RESTART_WAIT : begin
         if ((~tx_busy_led) && (~rx_busy_led)) begin
           present_state <= TX_RX_RESTART;
-          send_msg6_reg <= 1'b1; // TX AND RX NO LONGER BUSY 
         end else begin
           present_state <= PACKET_RESTART_WAIT;
         end
@@ -190,7 +135,6 @@ always @(posedge init_clk) begin
           present_state         <= TX_RX_RESTART;
         end else begin
           lbus_tx_rx_restart_in <= 1'b0;
-          send_msg7_reg         <= 1'b1; // PACKET REGENERATION RESTARTED + (SANITY Test) STARTED
           present_state         <= TX_RX_BUSY_WAIT;
         end
       end
@@ -198,7 +142,6 @@ always @(posedge init_clk) begin
       TX_RX_BUSY_WAIT : begin
         if ((tx_busy_led) && (rx_busy_led)) begin
           present_state <= PACKET_SEND_2;
-          send_msg8_reg <= 1'b1; // TX AND RX BUSY
         end else begin
           present_state <= TX_RX_BUSY_WAIT;
         end
@@ -207,7 +150,6 @@ always @(posedge init_clk) begin
       PACKET_SEND_2 : begin
         if (tx_done_led == 1'b1) begin
           present_state <= PACKET_RECEIVE_2;
-          send_msg4_reg <= 1'b1; // ALL PACKETS SENT
         end else begin
           present_state <= PACKET_SEND_2;
         end
@@ -216,7 +158,6 @@ always @(posedge init_clk) begin
       PACKET_RECEIVE_2 : begin
         if (rx_done_led == 1'b1) begin
           present_state <= DONE_WAIT;
-          send_msg5_reg <= 1'b1; // ALL PACKETS RECEIVED
         end else begin
           present_state <= PACKET_RECEIVE_2;
         end
@@ -224,12 +165,14 @@ always @(posedge init_clk) begin
 
       DONE_WAIT : begin
         if ((~tx_busy_led) && (~rx_busy_led)) begin
-          if (msg9_sent == 1'b0) begin
-            send_msg9_reg <= 1'b1; // Test completed successfully
-            msg9_sent     <= 1'b1;
-          end
+          present_state <= DONE;
+        end else begin
+          present_state <= DONE_WAIT;
         end
-        present_state <= DONE_WAIT;
+      end
+
+      DONE : begin
+        present_state <= DONE;
       end
     endcase
   end

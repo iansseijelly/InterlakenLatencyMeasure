@@ -12,15 +12,6 @@ reg gt_ref_clk0_p;
 reg gt_ref_clk0_n;
 reg ref_clk;
 wire locked;
-wire send_msg1;
-wire send_msg2;
-wire send_msg3;
-wire send_msg4;
-wire send_msg5;
-wire send_msg6;
-wire send_msg7;
-wire send_msg8;
-wire send_msg9;
 
 // Instantiate the top-level module
 interlaken_0_fpga_top dut
@@ -28,16 +19,7 @@ interlaken_0_fpga_top dut
     .init_clk(init_clk),
     .gt_ref_clk0_p(gt_ref_clk0_p),
     .gt_ref_clk0_n(gt_ref_clk0_n),
-    .clk_reset(~locked),
-    .send_msg1(send_msg1),
-    .send_msg2(send_msg2),
-    .send_msg3(send_msg3),
-    .send_msg4(send_msg4),
-    .send_msg5(send_msg5),
-    .send_msg6(send_msg6),
-    .send_msg7(send_msg7),
-    .send_msg8(send_msg8),
-    .send_msg9(send_msg9)
+    .clk_reset(~locked)
 );
 
 // Instantiate the clock wizard
